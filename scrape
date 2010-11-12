@@ -1,0 +1,47 @@
+#!/usr/bin/python
+
+import urllib2
+import lxml.etree
+import urlparse
+
+def get_place(li):
+    for sp in li.xpath("span[@class=\"place\"]/text()"):
+        return sp
+    return None
+
+def get_li(doc, place):
+    for li in doc.xpath("li"):
+        if get_place(li) == place:
+            return li
+    return None    
+
+def get_ahref(li, alt):
+    for a in li.xpath("a[@class=\"nav\"]"):
+        for imgalt in a.xpath("img/@alt"):
+            if imgalt == alt:
+                return a.attrib["href"]
+
+def get_next(code):
+    url = "http://lesswrong.com/api/article_navigation?article_id={0}".format(code)
+    s = urllib2.urlopen(url).read()
+    #doc = lxml.etree.parse(url) # doesn't use proxy
+    doc = lxml.etree.fromstring(s)
+    #print lxml.etree.tostring(doc)
+    li = get_li(doc, "by author")
+    return get_ahref(li, "Next")
+
+def get_urlcode(url):
+    path = urlparse.urlparse(url).path.split("/")
+    return path[2]
+    
+path = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
+print path
+for i in range(4):
+    path = urlparse.urljoin(path, get_next(get_urlcode(path)))
+    print path
+
+
+#get_next("gn")
+#url = get_next("go")
+#print get_urlcode(url)
+
