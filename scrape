@@ -7,7 +7,7 @@ import urlparse
 # This respects http_proxy
 def get_from_url(url):
     #doc = lxml.etree.parse(url) # doesn't use proxy
-    return lxml.etree.fromstring(urllib2.urlopen(url).read())
+    return lxml.etree.parse(urllib2.urlopen(url))
 
 def get_place(li):
     for sp in li.xpath("span[@class=\"place\"]/text()"):
