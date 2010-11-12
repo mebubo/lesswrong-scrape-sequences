@@ -4,6 +4,11 @@ import urllib2
 import lxml.etree
 import urlparse
 
+# This respects http_proxy
+def get_from_url(url):
+    #doc = lxml.etree.parse(url) # doesn't use proxy
+    return lxml.etree.fromstring(urllib2.urlopen(url).read())
+
 def get_place(li):
     for sp in li.xpath("span[@class=\"place\"]/text()"):
         return sp
@@ -22,23 +27,18 @@ def get_ahref(li, alt):
                 return a.attrib["href"]
 
 def get_next(code):
-    url = "http://lesswrong.com/api/article_navigation?article_id={0}".format(code)
-    s = urllib2.urlopen(url).read()
-    #doc = lxml.etree.parse(url) # doesn't use proxy
-    doc = lxml.etree.fromstring(s)
+    doc = get_from_url(
+        "http://lesswrong.com/api/article_navigation?article_id={0}".format(code))
     #print lxml.etree.tostring(doc)
     li = get_li(doc, "by author")
     return get_ahref(li, "Next")
 
-def get_urlcode(url):
-    path = urlparse.urlparse(url).path.split("/")
-    return path[2]
-    
-path = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
-print path
+url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
+print url
 for i in range(4):
-    path = urlparse.urljoin(path, get_next(get_urlcode(path)))
-    print path
+    path = urlparse.urlparse(url).path.split("/")
+    url = urlparse.urljoin(url, get_next(path[2]))
+    print url
 
 
 #get_next("gn")
