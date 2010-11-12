@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import os
 import urllib2
 import lxml.etree
 import lxml.html
@@ -51,7 +52,7 @@ def get_next(url, code):
 def get_entry(url, code):
     content = get_html_from_url(url)
     #print lxml.html.tostring(content, pretty_print=True)
-    for frag in content.xpath("//div[@id=\"entry_t3_{0}\"]".format(code)):
+    for frag in content.xpath("//div[@id=\"entry_t3_{0}\"]/div/div".format(code)):
         return frag
     return None
 
@@ -61,22 +62,40 @@ def is_dodgy(url):
         return parsed.hostname != "wiki.lesswrong.com"
     if not parsed.hostname and not parsed.path.startswith("/lw/"):
         return True
-    return False    
+    return False
+
+def goodpath(path):
+    assert len(path) == 5
+    assert path[0] == ""
+    assert path[1] == "lw"
+    assert path[4] == ""
 
 url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
-for i in range(100):
+for i in range(20):
     print "    ", url
     path = urlparse.urlparse(url).path.split("/")
+    goodpath(path)   
     code = path[2]
     entry = get_entry(url, code)
+    
     #print lxml.html.tostring(entry, pretty_print=True)
-    for href in entry.xpath(".//a/@href"):
-        if is_dodgy(href):
-            print "href:", href
-    for src in entry.xpath(".//img/@src"):
-        if is_dodgy(src):
-            print "src:",src
-     
+    for a in entry.xpath(".//a"):
+        if not a.attrib.has_key("href"):
+            continue
+        href = a.attrib["href"]
+        parsed = urlparse.urlparse(href)
+        if not parsed.hostname:
+            hpath = parsed.path.split("/")
+            goodpath(path)
+            a.attrib["href"] = "../{0}/{1}.html".format(hpath[2], hpath[3])
+        #if is_dodgy(href):
+        #    print "href:", href
+    #for src in entry.xpath(".//img/@src"):
+    #    if is_dodgy(src):
+    #        print "src:",src
+    os.makedirs("/".join(path[1:-2]))
+    with open("/".join(path[1:-1]) + ".html", "w") as f:
+        f.write(lxml.html.tostring(entry))
     #print
     #print "===================================================="
     #print
