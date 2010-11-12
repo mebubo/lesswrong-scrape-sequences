@@ -36,25 +36,53 @@ def get_ahref(li, alt):
         for imgalt in a.xpath("img/@alt"):
             if imgalt == alt:
                 return a.attrib["href"]
+    return None
 
 def get_next(url, code):
     doc = get_from_url(
         "http://lesswrong.com/api/article_navigation?article_id={0}".format(code))
     #print lxml.etree.tostring(doc)
     li = get_li(doc, "by author")
-    return urlparse.urljoin(url, get_ahref(li, "Next"))
+    if li is None: return None
+    ahref = get_ahref(li, "Next")
+    if ahref is None: return None
+    return urlparse.urljoin(url, ahref)
 
-url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
-#print url
-for i in range(1):
-    path = urlparse.urlparse(url).path.split("/")
-    code = path[2]
+def get_entry(url, code):
     content = get_html_from_url(url)
     #print lxml.html.tostring(content, pretty_print=True)
     for frag in content.xpath("//div[@id=\"entry_t3_{0}\"]".format(code)):
-        print lxml.html.tostring(frag, pretty_print=True)
+        return frag
+    return None
+
+def is_dodgy(url):
+    parsed = urlparse.urlparse(url)
+    if parsed.hostname and parsed.hostname.endswith("lesswrong.com"):
+        return parsed.hostname != "wiki.lesswrong.com"
+    if not parsed.hostname and not parsed.path.startswith("/lw/"):
+        return True
+    return False    
+
+url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
+for i in range(100):
+    print "    ", url
+    path = urlparse.urlparse(url).path.split("/")
+    code = path[2]
+    entry = get_entry(url, code)
+    #print lxml.html.tostring(entry, pretty_print=True)
+    for href in entry.xpath(".//a/@href"):
+        if is_dodgy(href):
+            print "href:", href
+    for src in entry.xpath(".//img/@src"):
+        if is_dodgy(src):
+            print "src:",src
+     
+    #print
+    #print "===================================================="
+    #print
     url = get_next(url, code)
-    #print url
+    if url is None:
+        break
 
 
 #get_next("gn")
