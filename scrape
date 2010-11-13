@@ -49,10 +49,17 @@ def get_next(url, code):
     if ahref is None: return None
     return urlparse.urljoin(url, ahref)
 
-def get_entry(url, code):
-    content = get_html_from_url(url)
-    #print lxml.html.tostring(content, pretty_print=True)
+def get_title(content):
+    for t in content.xpath("//h1/a/text()"):
+        return t
+
+def get_body(content, code):
     for frag in content.xpath("//div[@id=\"entry_t3_{0}\"]/div/div".format(code)):
+        return frag
+    return None
+
+def get_date(content):
+    for frag in content.xpath("//span[@class=\"date\"]/text()"):
         return frag
     return None
 
@@ -70,13 +77,32 @@ def goodpath(path):
     assert path[1] == "lw"
     assert path[4] == ""
 
+pairs = []
+
 url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
-for i in range(20):
+for i in range(100):
     print "    ", url
     path = urlparse.urlparse(url).path.split("/")
-    goodpath(path)   
+    goodpath(path)
+    filename = "/".join(path[1:-1]) + ".html"
+    os.makedirs("/".join(path[1:-2]))
     code = path[2]
-    entry = get_entry(url, code)
+    content = get_html_from_url(url)
+    #with open("/".join(path[1:-1]) + ".raw.html", "w") as f:
+    #    f.write(lxml.html.tostring(content, pretty_print=True))
+    title = get_title(content)
+    print "     -----", title
+    pairs.append((title, filename))
+    date = get_date(content)
+    print "     -----", date
+    entry = get_body(content, code)
+    d = lxml.etree.Element("p")
+    d.text = date
+    entry.insert(0, d)
+    h1 = lxml.etree.Element("h1")
+    h1.text = title
+    entry.insert(0, h1)
+    #lxml.etree.SubElement(entry, "hr")
     
     #print lxml.html.tostring(entry, pretty_print=True)
     for a in entry.xpath(".//a"):
@@ -93,8 +119,7 @@ for i in range(20):
     #for src in entry.xpath(".//img/@src"):
     #    if is_dodgy(src):
     #        print "src:",src
-    os.makedirs("/".join(path[1:-2]))
-    with open("/".join(path[1:-1]) + ".html", "w") as f:
+    with open(filename, "w") as f:
         f.write(lxml.html.tostring(entry))
     #print
     #print "===================================================="
@@ -103,7 +128,13 @@ for i in range(20):
     if url is None:
         break
 
-
+with open("index.html", "w") as f:
+    f.write("<html>")
+    f.write("<head><title>Eliezer Yudkowsky</title></head>")
+    f.write("<body><ul>")
+    for t, h in pairs:
+        f.write("<li><a href=\"{0}\">{1}</a></li>".format(h, t))
+    f.write("</ul></body></html>")
 #get_next("gn")
 #url = get_next("go")
 #print get_urlcode(url)
