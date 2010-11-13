@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import os
+import urllib
 import urllib2
 import lxml.etree
 import lxml.html
@@ -9,6 +10,7 @@ import urlparse
 
 # This respects http_proxy
 def get_from_url(url):
+    #print url
     #doc = lxml.etree.parse(url) # doesn't use proxy
     #return lxml.etree.parse(urllib2.urlopen(url))
     s = urllib2.urlopen(url).read()
@@ -37,10 +39,12 @@ def get_ahref(li, alt):
     for a in li.xpath("a[@class=\"nav\"]"):
         for imgalt in a.xpath("img/@alt"):
             if imgalt == alt:
-                return a.attrib["href"]
+                return unicode(a.attrib["href"])
     return None
 
 def get_next(url, code):
+    if code == "t6":
+        return "http://lesswrong.com/lw/t7/dumb_deplaning/"
     doc = get_from_url(
         "http://lesswrong.com/api/article_navigation?article_id={0}".format(code))
     #print lxml.etree.tostring(doc)
@@ -48,7 +52,8 @@ def get_next(url, code):
     if li is None: return None
     ahref = get_ahref(li, "Next")
     if ahref is None: return None
-    return urlparse.urljoin(url, ahref)
+    print ahref
+    return urlparse.urljoin(url, urllib.quote(ahref.encode("utf-8")))
 
 def get_title(content):
     for t in content.xpath("//h1/a/text()"):
@@ -73,18 +78,18 @@ def is_dodgy(url):
     return False
 
 def goodpath(path):
-    assert len(path) == 5
-    assert path[0] == ""
-    assert path[1] == "lw"
-    assert path[4] == ""
+    return (len(path) == 5
+        and path[0] == ""
+        and path[1] == "lw"
+        and path[4] == "")
 
 pairs = []
 
 url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
-for i in range(10):
+while True:
     print "    ", url
     path = urlparse.urlparse(url).path.split("/")
-    goodpath(path)
+    assert(goodpath(path))
     filename = "/".join(path[1:-1]) + ".html"
     os.makedirs("/".join(path[1:-2]))
     code = path[2]
@@ -104,8 +109,11 @@ for i in range(10):
         parsed = urlparse.urlparse(href)
         if not parsed.hostname:
             hpath = parsed.path.split("/")
-            goodpath(path)
-            a.attrib["href"] = "../{0}/{1}.html".format(hpath[2], hpath[3])
+            if goodpath(hpath):
+                a.attrib["href"] = u"../{0}/{1}.html".format(hpath[2], hpath[3])
+            else:
+                a.attrib["href"] = urlparse.urljoin(url, href)
+
     page = E.HTML(
         E.HEAD(
             E.TITLE(title)
