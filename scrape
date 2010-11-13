@@ -106,15 +106,14 @@ for i in range(10):
             hpath = parsed.path.split("/")
             goodpath(path)
             a.attrib["href"] = "../{0}/{1}.html".format(hpath[2], hpath[3])
-    body = E.BODY(
-        E.H1(title),
-        E.P(date),
-        *list(entry)
-    )
     page = E.HTML(
         E.HEAD(
             E.TITLE(title)
-        ), body
+        ), E.BODY(
+            E.H1(title),
+            E.P(date),
+            *list(entry)
+        )
     )
 
     with open(filename, "w") as f:
@@ -123,14 +122,19 @@ for i in range(10):
     if url is None:
         break
 
+page = E.HTML(
+    E.HEAD(
+        E.TITLE("Sequences"),
+    ), E.BODY(
+        E.UL(
+            *[
+                E.LI(E.A(t, href=h))
+                for t, h in pairs
+             ]
+        )
+    )
+)
 with open("index.html", "w") as f:
-    f.write("<html>")
-    f.write("<head><title>Eliezer Yudkowsky</title></head>")
-    f.write("<body><ul>")
-    for t, h in pairs:
-        f.write("<li><a href=\"{0}\">{1}</a></li>".format(h, t))
-    f.write("</ul></body></html>")
-#get_next("gn")
-#url = get_next("go")
-#print get_urlcode(url)
+        f.write(lxml.html.tostring(page))
+    
 
