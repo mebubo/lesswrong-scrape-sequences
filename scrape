@@ -1,28 +1,70 @@
 #!/usr/bin/python
 
+import itertools
 import os
+import base64
+import httplib
 import urllib
 import urllib2
+import urlparse
 import lxml.etree
 import lxml.html
 from lxml.html import builder as E
-import urlparse
 
+os.mkdir("target")
+
+def makedirs(t):
+    if not os.path.isdir(t):
+        os.makedirs(t)
+makedirs("cache/urlcontent")
+makedirs("cache/301")
+
+# Very very simple memoize suitable only for these exact circumstances
+def memoize(dr):
+    def memf(func):
+        def memoized(url):
+            centry = "cache/{0}/{1}".format(
+                dr, base64.b64encode(url, "_-"))
+            if os.path.isfile(centry):
+                with open(centry) as f:
+                    return f.read()
+            res = func(url)
+            with open(centry, "w") as f:
+                f.write(res)
+            return res
+        return memoized
+    return memf
+            
 # This respects http_proxy
+@memoize("urlcontent")
+def read_url(url):
+    print "Getting: ", url
+    return urllib2.urlopen(url).read()
+
+conmap = {}
+
+@memoize("301")
+def check_for_301(url):
+    print "Checking for 301: ", url
+    purl = urlparse.urlparse(url)
+    if purl.hostname not in conmap:
+        conmap[purl.hostname] = httplib.HTTPConnection(purl.hostname)
+    conn = conmap[purl.hostname]
+    conn.request("HEAD", url)
+    resp = conn.getresponse()
+    try:
+        if resp.status == 301:
+            return resp.getheader('location')
+        else:
+            return url
+    finally:
+        resp.read()
+
 def get_from_url(url):
-    #print url
-    #doc = lxml.etree.parse(url) # doesn't use proxy
-    #return lxml.etree.parse(urllib2.urlopen(url))
-    s = urllib2.urlopen(url).read()
-    #print s
-    return lxml.etree.fromstring(s)
+    return lxml.etree.fromstring(read_url(url))
 
 def get_html_from_url(url):
-    #doc = lxml.etree.parse(url) # doesn't use proxy
-    #return lxml.etree.parse(urllib2.urlopen(url))
-    s = urllib2.urlopen(url).read()
-    #print s
-    return lxml.html.fromstring(s)
+    return lxml.html.fromstring(read_url(url))
 
 def get_place(li):
     for sp in li.xpath("span[@class=\"place\"]/text()"):
@@ -41,19 +83,12 @@ def get_ahref(li, alt):
             if imgalt == alt:
                 return unicode(a.attrib["href"])
     return None
-
-def get_next(url, code):
-    if code == "t6":
-        return "http://lesswrong.com/lw/t7/dumb_deplaning/"
-    doc = get_from_url(
-        "http://lesswrong.com/api/article_navigation?article_id={0}".format(code))
-    #print lxml.etree.tostring(doc)
-    li = get_li(doc, "by author")
-    if li is None: return None
-    ahref = get_ahref(li, "Next")
-    if ahref is None: return None
-    print ahref
-    return urlparse.urljoin(url, urllib.quote(ahref.encode("utf-8")))
+    
+def goodpath(path):
+    return (len(path) == 5
+        and path[0] == ""
+        and path[1] == "lw"
+        and path[4] == "")
 
 def get_title(content):
     for t in content.xpath("//h1/a/text()"):
@@ -69,66 +104,85 @@ def get_date(content):
         return unicode(frag)
     return None
 
-def is_dodgy(url):
-    parsed = urlparse.urlparse(url)
-    if parsed.hostname and parsed.hostname.endswith("lesswrong.com"):
-        return parsed.hostname != "wiki.lesswrong.com"
-    if not parsed.hostname and not parsed.path.startswith("/lw/"):
-        return True
-    return False
+class Blogpost(object):
+    def __init__(self, sequence, url):
+        self.sequence = sequence
+        self.url = url
+        path = urlparse.urlparse(url).path.split("/")
+        assert(goodpath(path))
+        self.code = path[2]
+        #self.filename = "/".join(path[1:-1]) + ".html"
+        #self.dir = "/".join(path[1:-2])
+        self.filename = "{0:04d}.html".format(sequence)
+    
+    def get_nexturl(self):
+        if self.code == "t6":
+            return "http://lesswrong.com/lw/t7/dumb_deplaning/"
+        doc = get_from_url(
+            "http://lesswrong.com/api/article_navigation?article_id={0}".format(self.code))
+        li = get_li(doc, "by author")
+        if li is None: return None
+        ahref = get_ahref(li, "Next")
+        if ahref is None: return None
+        return urlparse.urljoin(self.url, 
+            urllib.quote(ahref.encode("utf-8")))
 
-def goodpath(path):
-    return (len(path) == 5
-        and path[0] == ""
-        and path[1] == "lw"
-        and path[4] == "")
-
-pairs = []
-
-url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
-while True:
-    print "    ", url
-    path = urlparse.urlparse(url).path.split("/")
-    assert(goodpath(path))
-    filename = "/".join(path[1:-1]) + ".html"
-    os.makedirs("/".join(path[1:-2]))
-    code = path[2]
-    content = get_html_from_url(url)
-    #with open("/".join(path[1:-1]) + ".raw.html", "w") as f:
-    #    f.write(lxml.html.tostring(content, pretty_print=True))
-    title = get_title(content)
-    print "     -----", title
-    pairs.append((title, filename))
-    date = get_date(content)
-    print "     -----", date
-    entry = get_body(content, code)
-    for a in entry.xpath(".//a"):
-        if not a.attrib.has_key("href"):
-            continue
-        href = a.attrib["href"]
-        parsed = urlparse.urlparse(href)
-        if not parsed.hostname:
-            hpath = parsed.path.split("/")
-            if goodpath(hpath):
-                a.attrib["href"] = u"../{0}/{1}.html".format(hpath[2], hpath[3])
+    def write(self, urlmap):
+        #os.makedirs("target/" + self.dir)
+        content = get_html_from_url(self.url)
+        self.title = get_title(content)
+        print "     -----", self.title
+        self.date = get_date(content)
+        print "     -----", self.date
+        entry = get_body(content, self.code)
+        for a in entry.xpath(".//a"):
+            if not a.attrib.has_key("href"):
+                continue
+            href = urlparse.urljoin(url, a.attrib["href"])
+            if href.startswith("http://www.overcomingbias.com/"):
+                href = check_for_301(href)
+            if href in urlmap:
+                print "URL Mapping {0} to {1}".format(
+                    href,urlmap[href].filename)
+                a.attrib["href"] = urlmap[href].filename
             else:
-                a.attrib["href"] = urlparse.urljoin(url, href)
+                print "URL Preserving {0} which is {1} + {2}".format(
+                    href, url, a.attrib["href"])
+                a.attrib["href"] = href
 
-    page = E.HTML(
-        E.HEAD(
-            E.TITLE(title)
-        ), E.BODY(
-            E.H1(title),
-            E.P(date),
-            *list(entry)
+        page = E.HTML(
+            E.HEAD(
+                E.TITLE(self.title)
+            ), E.BODY(*([
+                E.H1(self.title),
+                E.P("Eliezer Yudkowsky, " + self.date),
+                ] + list(entry) + [
+                E.P(E.I("Original with comments: ", 
+                    E.A(self.title, href=self.url)))
+            ]))
         )
-    )
 
-    with open(filename, "w") as f:
-        f.write(lxml.html.tostring(page))
-    url = get_next(url, code)
+        with open("target/" + self.filename, "w") as f:
+            f.write(lxml.html.tostring(page))
+    
+print "Collecting URLs"
+posts = []
+url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
+#for seq in itertools.count(1): # ie forever
+for seq in range(1,101):
+    print "...", url
+    post = Blogpost(seq, url)
+    posts.append(post)
+    url = post.get_nexturl()
     if url is None:
         break
+
+urlmap = dict((p.url, p) for p in posts)
+
+print "Writing posts"
+for i, post in enumerate(posts):
+    print "URL: ", post.url, "{0}/{1}".format(i+1, len(posts))
+    post.write(urlmap)
 
 page = E.HTML(
     E.HEAD(
@@ -136,13 +190,13 @@ page = E.HTML(
     ), E.BODY(
         E.UL(
             *[
-                E.LI(E.A(t, href=h))
-                for t, h in pairs
+                E.LI(E.A(p.title, href=p.filename))
+                for p in posts
              ]
         )
     )
 )
-with open("index.html", "w") as f:
+with open("target/index.html", "w") as f:
         f.write(lxml.html.tostring(page))
     
 
