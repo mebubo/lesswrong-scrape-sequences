@@ -11,13 +11,9 @@ import lxml.etree
 import lxml.html
 from lxml.html import builder as E
 
-os.mkdir("target")
-
 def makedirs(t):
     if not os.path.isdir(t):
         os.makedirs(t)
-makedirs("cache/urlcontent")
-makedirs("cache/301")
 
 # Very very simple memoize suitable only for these exact circumstances
 def memoize(dr):
@@ -164,39 +160,46 @@ class Blogpost(object):
 
         with open("target/" + self.filename, "w") as f:
             f.write(lxml.html.tostring(page))
-    
-print "Collecting URLs"
-posts = []
-url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
-#for seq in itertools.count(1): # ie forever
-for seq in range(1,101):
-    print "...", url
-    post = Blogpost(seq, url)
-    posts.append(post)
-    url = post.get_nexturl()
-    if url is None:
-        break
 
-urlmap = dict((p.url, p) for p in posts)
+def scrape_all(start_url, sequencer):
+    print "Collecting URLs"
+    posts = []
+    url = start_url
+    for seq in sequencer:
+        print "...", url
+        post = Blogpost(seq, url)
+        posts.append(post)
+        url = post.get_nexturl()
+        if url is None:
+            break
 
-print "Writing posts"
-for i, post in enumerate(posts):
-    print "URL: ", post.url, "{0}/{1}".format(i+1, len(posts))
-    post.write(urlmap)
+    urlmap = dict((p.url, p) for p in posts)
 
-page = E.HTML(
-    E.HEAD(
-        E.TITLE("Sequences"),
-    ), E.BODY(
-        E.UL(
-            *[
-                E.LI(E.A(p.title, href=p.filename))
-                for p in posts
-             ]
+    print "Writing posts"
+    for i, post in enumerate(posts):
+        print "URL: ", post.url, "{0}/{1}".format(i+1, len(posts))
+        post.write(urlmap)
+
+    page = E.HTML(
+        E.HEAD(
+            E.TITLE("Sequences"),
+        ), E.BODY(
+            E.UL(
+                *[
+                    E.LI(E.A(p.title, href=p.filename))
+                    for p in posts
+                 ]
+            )
         )
     )
-)
-with open("target/index.html", "w") as f:
-        f.write(lxml.html.tostring(page))
+    with open("target/index.html", "w") as f:
+            f.write(lxml.html.tostring(page))
     
+os.mkdir("target")
+makedirs("cache/urlcontent")
+makedirs("cache/301")
+
+url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
+#for seq in itertools.count(1): # ie forever
+scrape_all(url, range(1,101))
 
