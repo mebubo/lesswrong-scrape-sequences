@@ -1,0 +1,21 @@
+#!/usr/bin/python
+
+import glob
+import re
+
+rexp = re.compile(
+    r"\b([A-Za-z]*)((\&\#x[0-9A-F]+;){2,})([A-Za-z]*)\b")
+#    r"\b(([A-Za-z]|\&\#x[0-9A-F]+;)*?)((\&\#x[0-9A-F]+;){2,})(([A-Za-z]|\&\#x[0-9A-F]+;)*?)\b")
+#    r"\&#x[0-9A-F]+;")
+
+for name in glob.glob("cache/urlcontent/*"):
+    with open(name) as f:
+        for line in f:
+            s = 0
+            while True:
+                m = rexp.search(line, s)
+                if m is None:
+                    break
+                print m.group(2), m.group(), m.group(1), m.group(4)
+                s = m.end()
+
