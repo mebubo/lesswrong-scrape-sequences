@@ -1,0 +1,16 @@
+#!/usr/bin/python
+
+
+with open("examples") as f:
+    for l in f:
+        l = l.split()
+        expr = l[0][3:-1].split(";&#x")
+        del l[0]
+        if [x for x in expr if len(x) > 2]:
+            print expr, l
+        else:
+            try:
+                c = ("".join(chr(int(e, 16)) for e in expr)).decode("utf-8")
+                #print "Unicode decoded:", " ".join([unicode(s).replace("?", c) for s in l])
+            except:
+                print "Unicode failed:", expr, l
