@@ -136,14 +136,16 @@ class Blogpost(object):
                 continue
             href = urlparse.urljoin(url, a.attrib["href"])
             if href.startswith("http://www.overcomingbias.com/"):
+                #print "Before:", href
                 href = check_for_301(href)
+                #print "After: ", href
             if href in urlmap:
-                print "URL Mapping {0} to {1}".format(
-                    href,urlmap[href].filename)
+                #print "URL Mapping {0} to {1}".format(
+                #    href,urlmap[href].filename)
                 a.attrib["href"] = urlmap[href].filename
             else:
-                print "URL Preserving {0} which is {1} + {2}".format(
-                    href, url, a.attrib["href"])
+                #print "URL Preserving {0} which is {1} + {2}".format(
+                #    href, url, a.attrib["href"])
                 a.attrib["href"] = href
 
         page = E.HTML(
@@ -200,6 +202,7 @@ makedirs("cache/urlcontent")
 makedirs("cache/301")
 
 url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
-#for seq in itertools.count(1): # ie forever
-scrape_all(url, range(1,101))
+seq = itertools.count(1)
+#seq = range(1,101)
+scrape_all(url, seq)
 
