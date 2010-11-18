@@ -8,6 +8,7 @@ rexp = re.compile(
 #    r"\b(([A-Za-z]|\&\#x[0-9A-F]+;)*?)((\&\#x[0-9A-F]+;){2,})(([A-Za-z]|\&\#x[0-9A-F]+;)*?)\b")
 #    r"\&#x[0-9A-F]+;")
 
+examples = {}
 for name in glob.glob("cache/urlcontent/*"):
     with open(name) as f:
         for line in f:
@@ -16,6 +17,10 @@ for name in glob.glob("cache/urlcontent/*"):
                 m = rexp.search(line, s)
                 if m is None:
                     break
-                print m.group(2), m.group(), m.group(1), m.group(4)
+                t = examples.setdefault(m.group(2), set())
+                t.add((m.group(1), m.group(4)))
+                #print m.group(2), m.group(), m.group(1), m.group(4)
                 s = m.end()
 
+for k, v in examples.iteritems():
+    print k, " ".join("{0}?{1}".format(l, r) for l, r in v)
