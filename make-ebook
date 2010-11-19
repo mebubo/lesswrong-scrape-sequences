@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -e
+
+rm -f lesswrong.epub
+
+ebook-convert target/index.html lesswrong.epub  --input-encoding=utf-8 --chapter=//h1 --use-auto-toc --title="Blog posts 2007-2010" --authors="Eliezer Yudkowsky" --max-toc-links=0 --breadth-first
+
