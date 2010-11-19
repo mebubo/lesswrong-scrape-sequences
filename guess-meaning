@@ -1,16 +1,27 @@
 #!/usr/bin/python
 
+def tryencoding(encoding, c):
+    try:
+        decode = c.encode(encoding).decode("utf-8")
+        return encoding, decode
+    except Exception, e:
+        #print encoding, "failed" #, e
+        return None
+    
 
 with open("examples") as f:
     for l in f:
         l = l.split()
         expr = l[0][3:-1].split(";&#x")
         del l[0]
-        if [x for x in expr if len(x) > 2]:
-            print expr, l
+        c = ("".join(unichr(int(e, 16)) for e in expr))
+        for encoding in ["latin-1", "cp874"]:
+            res = tryencoding(encoding, c)
+            if res is not None:
+                break
+        if res:
+            encoding, decode = res
+            print encoding, " ".join(s.replace("?", decode) for s in l)
         else:
-            try:
-                c = ("".join(chr(int(e, 16)) for e in expr)).decode("utf-8")
-                #print "Unicode decoded:", " ".join([unicode(s).replace("?", c) for s in l])
-            except:
-                print "Unicode failed:", expr, l
+            print repr(c), " ".join(l)
+
