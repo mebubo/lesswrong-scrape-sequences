@@ -12,6 +12,12 @@ import lxml.etree
 import lxml.html
 from lxml.html import builder as E
 
+import substable
+
+subsmap = dict((k, v)
+    for k, v in substable.substable
+    if v is not None)
+
 def makedirs(t):
     if not os.path.isdir(t):
         os.makedirs(t)
@@ -101,26 +107,19 @@ def get_date(content):
         return unicode(frag)
     return None
 
-instancemap = {}
-
 rexp = re.compile(r"([ -~]*)([^ -~]+|$)")
 def hifroz(t):
     if t is None:
         return None
     # Pretty convinced that none of these are semantic
-    t = t.replace(u"\u00A0", " ")
-    t = t.replace(u"\u000A", " ")
     offset = 0
-    matches = set()
+    res = []
     while offset < len(t):
         m = rexp.match(t, offset)
         u = m.group(2)
-        if len(u) > 0:
-            matches.add(u)
+        res += [m.group(1), subsmap.get(u, u)]
         offset = m.end()
-    for c in matches:
-        instancemap.setdefault(c, set()).add(t)
-    return t
+    return "".join(res)
 
 class Blogpost(object):
     def __init__(self, sequence, url):
@@ -232,5 +231,4 @@ url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
 seq = itertools.count(1)
 #seq = range(1,11)
 scrape_all(url, seq)
-with open("instancemap.py", "w") as f:
-    f.write("instances = " + repr(instancemap))
+
