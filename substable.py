@@ -1,7 +1,8 @@
 
 substable = [
-    (u'\u8305', u'\u00e9'),
-    (u'\t', None),
+    (u'\x0a', ' '),
+    (u'\t', ' '),
+    (u'\xa0', ' '),
     (u'\xa2', None),
     (u'\xa3', None),
     (u'\xb0', None),
@@ -13,7 +14,7 @@ substable = [
     (u'\xe2\x80\x94', u'\u2014'),
     (u'\xe2\x80\x99', '\''), # not u'\u2019'
     (u'\xe2\x88\x9a', u'\u221a'),
-    (u'\xe2\x89', u'\2260'), # Not equals!
+    (u'\xe2\x89', u'\u2260'), # Not equals!
     (u'\xe7', None),
     (u'\xe8', None),
     (u'\xe9', None),
@@ -51,5 +52,6 @@ substable = [
     (u'\u2265', None),
     (u'\u2610', None),
     (u'\u2611', None),
+    (u'\u8305', u'\u00e9'),
     (u'\u8d38', u'\xf3'),
 ]
