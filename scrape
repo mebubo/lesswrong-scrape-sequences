@@ -210,11 +210,11 @@ def scrape_all(start_url, sequencer):
 
     page = E.HTML(
         E.HEAD(
-            E.TITLE("Sequences"),
+            E.TITLE("Eliezer Yukowsky blog posts, 2006-2010"),
         ), E.BODY(
             E.UL(
                 *[
-                    E.LI(E.A(p.title, href=p.filename))
+                    E.LI(E.A(p.title, href=p.filename), ", ", p.date)
                     for p in posts
                  ]
             )
