@@ -2,3 +2,5 @@ target/.*
 cache/.*
 lesswrong.epub
 .*\.pyc
+.*~
+
