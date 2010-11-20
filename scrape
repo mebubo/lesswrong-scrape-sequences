@@ -131,6 +131,7 @@ class Blogpost(object):
         #self.filename = "/".join(path[1:-1]) + ".html"
         #self.dir = "/".join(path[1:-2])
         self.filename = "{0:04d}.html".format(sequence)
+        self.backrefs = set()
     
     def get_nexturl(self):
         if self.code == "t6":
@@ -144,35 +145,42 @@ class Blogpost(object):
         return urlparse.urljoin(self.url, 
             urllib.quote(ahref.encode("utf-8")))
 
-    def write(self, urlmap):
-        #os.makedirs("target/" + self.dir)
+    def read(self):
         content = get_html_from_url(self.url)
         self.title = get_title(content)
-        print "     -----", self.title
         self.date = get_date(content)
-        print "     -----", self.date
-        entry = get_body(content, self.code)
-        
-        for a in entry.xpath(".//a"):
+        self.entry = get_body(content, self.code)
+        for e in self.entry.iter():
+            e.text = hifroz(e.text)
+            e.tail = hifroz(e.tail)
+
+    def fix_urls(self, urlmap):
+        for a in self.entry.xpath(".//a"):
             if not a.attrib.has_key("href"):
                 continue
             href = urlparse.urljoin(url, a.attrib["href"])
             if href.startswith("http://www.overcomingbias.com/"):
-                #print "Before:", href
                 href = check_for_301(href)
-                #print "After: ", href
             if href in urlmap:
-                #print "URL Mapping {0} to {1}".format(
-                #    href,urlmap[href].filename)
-                a.attrib["href"] = urlmap[href].filename
+                ref = urlmap[href]
+                a.attrib["href"] = ref.filename
+                ref.backrefs.add(self)
             else:
-                #print "URL Preserving {0} which is {1} + {2}".format(
-                #    href, url, a.attrib["href"])
                 a.attrib["href"] = href
 
-        for e in entry.iter():
-            e.text = hifroz(e.text)
-            e.tail = hifroz(e.tail)
+    def li(self):
+        return E.LI(E.A(self.title, href=self.filename), ", ", self.date)
+
+    def write(self):
+        if len(self.backrefs) == 0:
+            refs = []
+        else:
+            refs = [           
+                E.P(E.I("Referenced by:")),
+                E.UL(*[p.li()
+                    for p in sorted(self.backrefs, 
+                        key=lambda p: p.sequence)])
+            ]
 
         page = E.HTML(
             E.HEAD(
@@ -180,7 +188,7 @@ class Blogpost(object):
             ), E.BODY(*([
                 E.H1(self.title),
                 E.P("Eliezer Yudkowsky, " + self.date),
-                ] + list(entry) + [
+                ] + list(self.entry) + refs + [
                 E.P(E.I("Original with comments: ", 
                     E.A(self.title, href=self.url)))
             ]))
@@ -201,28 +209,32 @@ def scrape_all(start_url, sequencer):
         if url is None:
             break
 
-    urlmap = dict((p.url, p) for p in posts)
-
-    print "Writing posts"
+    print "Reading articles"
     for i, post in enumerate(posts):
-        print "URL: ", post.url, "{0}/{1}".format(i+1, len(posts))
-        post.write(urlmap)
+        print "{0:3}/{1:3} {2}".format(i+1, len(posts), post.url)
+        post.read()
 
-    page = E.HTML(
-        E.HEAD(
-            E.TITLE("Eliezer Yukowsky blog posts, 2006-2010"),
-        ), E.BODY(
-            E.UL(
-                *[
-                    E.LI(E.A(p.title, href=p.filename), ", ", p.date)
-                    for p in posts
-                 ]
-            )
-        )
-    )
+    print "Fixing URLs"
+    urlmap = dict((p.url, p) for p in posts)
+    for post in posts:
+        post.fix_urls(urlmap)
+
+    print "Writing"
+    for post in posts:
+        post.write()
+
+    print "Writing title"
     with open("target/index.html", "w") as f:
-            f.write(lxml.html.tostring(page))
-    
+        f.write(lxml.html.tostring(
+            E.HTML(
+                E.HEAD(
+                    E.TITLE("Eliezer Yukowsky blog posts, 2006-2010"),
+                ), E.BODY(
+                    E.H1("Eliezer Yukowsky blog posts, 2006-2010"),
+                    E.UL(*[p.li() for p in posts])
+                )
+            )))
+    print "Done"
 os.mkdir("target")
 makedirs("cache/urlcontent")
 makedirs("cache/301")
