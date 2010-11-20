@@ -2,6 +2,7 @@
 
 import itertools
 import os
+import re
 import base64
 import httplib
 import urllib
@@ -100,6 +101,27 @@ def get_date(content):
         return unicode(frag)
     return None
 
+instancemap = {}
+
+rexp = re.compile(r"([ -~]*)([^ -~]+|$)")
+def hifroz(t):
+    if t is None:
+        return None
+    # Pretty convinced that none of these are semantic
+    t = t.replace(u"\u00A0", " ")
+    t = t.replace(u"\u000A", " ")
+    offset = 0
+    matches = set()
+    while offset < len(t):
+        m = rexp.match(t, offset)
+        u = m.group(2)
+        if len(u) > 0:
+            matches.add(u)
+        offset = m.end()
+    for c in matches:
+        instancemap.setdefault(c, set()).add(t)
+    return t
+
 class Blogpost(object):
     def __init__(self, sequence, url):
         self.sequence = sequence
@@ -131,6 +153,7 @@ class Blogpost(object):
         self.date = get_date(content)
         print "     -----", self.date
         entry = get_body(content, self.code)
+        
         for a in entry.xpath(".//a"):
             if not a.attrib.has_key("href"):
                 continue
@@ -147,6 +170,10 @@ class Blogpost(object):
                 #print "URL Preserving {0} which is {1} + {2}".format(
                 #    href, url, a.attrib["href"])
                 a.attrib["href"] = href
+
+        for e in entry.iter():
+            e.text = hifroz(e.text)
+            e.tail = hifroz(e.tail)
 
         page = E.HTML(
             E.HEAD(
@@ -203,6 +230,7 @@ makedirs("cache/301")
 
 url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
 seq = itertools.count(1)
-#seq = range(1,101)
+#seq = range(1,11)
 scrape_all(url, seq)
-
+with open("instancemap.py", "w") as f:
+    f.write("instances = " + repr(instancemap))
