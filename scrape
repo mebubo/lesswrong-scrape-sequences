@@ -3,71 +3,17 @@
 import itertools
 import os
 import re
-import base64
-import httplib
 import urllib
-import urllib2
 import urlparse
-import lxml.etree
 import lxml.html
 from lxml.html import builder as E
 
+import cachefetch
 import substable
 
 subsmap = dict((k, v)
     for k, v in substable.substable
     if v is not None)
-
-def makedirs(t):
-    if not os.path.isdir(t):
-        os.makedirs(t)
-
-# Very very simple memoize suitable only for these exact circumstances
-def memoize(dr):
-    def memf(func):
-        def memoized(url):
-            centry = "cache/{0}/{1}".format(
-                dr, base64.b64encode(url, "_-"))
-            if os.path.isfile(centry):
-                with open(centry) as f:
-                    return f.read()
-            res = func(url)
-            with open(centry, "w") as f:
-                f.write(res)
-            return res
-        return memoized
-    return memf
-            
-# This respects http_proxy
-@memoize("urlcontent")
-def read_url(url):
-    print "Getting: ", url
-    return urllib2.urlopen(url).read()
-
-conmap = {}
-
-@memoize("301")
-def check_for_301(url):
-    print "Checking for 301: ", url
-    purl = urlparse.urlparse(url)
-    if purl.hostname not in conmap:
-        conmap[purl.hostname] = httplib.HTTPConnection(purl.hostname)
-    conn = conmap[purl.hostname]
-    conn.request("HEAD", url)
-    resp = conn.getresponse()
-    try:
-        if resp.status == 301:
-            return resp.getheader('location')
-        else:
-            return url
-    finally:
-        resp.read()
-
-def get_from_url(url):
-    return lxml.etree.fromstring(read_url(url))
-
-def get_html_from_url(url):
-    return lxml.html.fromstring(read_url(url))
 
 def get_place(li):
     for sp in li.xpath("span[@class=\"place\"]/text()"):
@@ -136,7 +82,7 @@ class Blogpost(object):
     def get_nexturl(self):
         if self.code == "t6":
             return "http://lesswrong.com/lw/t7/dumb_deplaning/"
-        doc = get_from_url(
+        doc = cachefetch.get_from_url(
             "http://lesswrong.com/api/article_navigation?article_id={0}".format(self.code))
         li = get_li(doc, "by author")
         if li is None: return None
@@ -146,7 +92,7 @@ class Blogpost(object):
             urllib.quote(ahref.encode("utf-8")))
 
     def read(self):
-        content = get_html_from_url(self.url)
+        content = cachefetch.get_html_from_url(self.url)
         self.title = get_title(content)
         self.date = get_date(content)
         self.entry = get_body(content, self.code)
@@ -160,7 +106,7 @@ class Blogpost(object):
                 continue
             href = urlparse.urljoin(url, a.attrib["href"])
             if href.startswith("http://www.overcomingbias.com/"):
-                href = check_for_301(href)
+                href = cachefetch.check_for_301(href)
             if href in urlmap:
                 ref = urlmap[href]
                 a.attrib["href"] = ref.filename
@@ -235,9 +181,8 @@ def scrape_all(start_url, sequencer):
                 )
             )))
     print "Done"
+
 os.mkdir("target")
-makedirs("cache/urlcontent")
-makedirs("cache/301")
 
 url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
 seq = itertools.count(1)
