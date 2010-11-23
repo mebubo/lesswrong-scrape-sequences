@@ -30,11 +30,15 @@ def get_ahref(li, alt):
                 return unicode(a.attrib["href"])
     return None
     
-def goodpath(path):
-    return (len(path) == 5
-        and path[0] == ""
-        and path[1] == "lw"
-        and path[4] == "")
+def urltocode(url):
+    purl = urlparse.urlparse(url)
+    if purl.hostname != "lesswrong.com":
+        return None
+    path = purl.path.split("/")
+    if not (path[0] == ""
+        and path[1] == "lw"):
+        return None
+    return path[2]
 
 def get_title(content):
     for t in content.xpath("//h1/a/text()"):
@@ -49,6 +53,15 @@ def get_date(content):
     for frag in content.xpath("//span[@class=\"date\"]/text()"):
         return unicode(frag)
     return None
+
+def get_titleurl(content):
+    for a in content.xpath("//h1/a/@href"):
+        return unicode(a)
+
+def linkornone(post):
+    if post is None:
+        return ""
+    return E.A(post.title, href=post.filename)
 
 rexp = re.compile(r"([ -~]*)([^ -~]+|$)")
 def hifroz(t):
@@ -68,28 +81,33 @@ class Blogpost(object):
     def __init__(self, sequence, url):
         self.sequence = sequence
         self.url = url
-        path = urlparse.urlparse(url).path.split("/")
-        assert(goodpath(path))
-        self.code = path[2]
-        #self.filename = "/".join(path[1:-1]) + ".html"
-        #self.dir = "/".join(path[1:-2])
+        self.code = urltocode(url)
         self.filename = "{0:04d}.html".format(sequence)
         self.backrefs = set()
+        self.sequences = []
+    
+    def urljoin(self, frag):
+        return urlparse.urljoin(self.url, urllib.quote(frag.encode("utf-8")))
     
     def get_nexturl(self):
         if self.code == "t6":
+            # A 500 error
             return "http://lesswrong.com/lw/t7/dumb_deplaning/"
+        elif self.code == "2s":
+            # Points to the article logically after it for some reason
+            return "http://lesswrong.com/lw/31/what_do_we_mean_by_rationality/"
         doc = cachefetch.get_from_url(
             "http://lesswrong.com/api/article_navigation?article_id={0}".format(self.code))
         li = get_li(doc, "by author")
         if li is None: return None
         ahref = get_ahref(li, "Next")
         if ahref is None: return None
-        return urlparse.urljoin(self.url, 
-            urllib.quote(ahref.encode("utf-8")))
+        return self.urljoin(ahref)
+            
 
     def read(self):
         content = cachefetch.get_html_from_url(self.url)
+        self.url = self.urljoin(get_titleurl(content))
         self.title = get_title(content)
         self.date = get_date(content)
         self.entry = get_body(content, self.code)
@@ -97,19 +115,29 @@ class Blogpost(object):
             e.text = hifroz(e.text)
             e.tail = hifroz(e.tail)
 
-    def fix_urls(self, urlmap):
+    def fix_urls(self, codemap):
+        for img in self.entry.xpath(".//img"):
+            if not img.attrib.has_key("src"):
+                continue
+            img.attrib["src"] = self.urljoin(img.attrib["src"])
         for a in self.entry.xpath(".//a"):
             if not a.attrib.has_key("href"):
                 continue
-            href = urlparse.urljoin(self.url, a.attrib["href"])
+            href = self.urljoin(a.attrib["href"])
             if href.startswith("http://www.overcomingbias.com/"):
                 href = cachefetch.check_for_301(href)
-            if href in urlmap:
-                ref = urlmap[href]
+            code = urltocode(href)
+            if code is not None and code in codemap:
+                ref = codemap[code]
                 a.attrib["href"] = ref.filename
                 ref.backrefs.add(self)
             else:
                 a.attrib["href"] = href
+                #if code is not None:
+                #    print "????", href
+
+    def addseq(self, seq):
+        self.sequences.append(seq)
 
     def li(self):
         return E.LI(E.A(self.title, href=self.filename), ", ", self.date)
@@ -125,13 +153,20 @@ class Blogpost(object):
                         key=lambda p: p.sequence)])
             ]
 
+        seqs = [E.TABLE(
+            E.TR(E.TH("Sequence: " + seq.title(), colspan="2")),
+            E.TR(
+                E.TD(linkornone(seq.before(self))),
+                E.TD(linkornone(seq.after(self)))
+            )
+        ) for seq in self.sequences]
         page = E.HTML(
             E.HEAD(
                 E.TITLE(self.title)
             ), E.BODY(*([
                 E.H1(self.title),
                 E.P("Eliezer Yudkowsky, " + self.date),
-                ] + list(self.entry) + refs + [
+                ] + list(self.entry) + seqs + refs + [
                 E.P(E.I("Original with comments: ", 
                     E.A(self.title, href=self.url)))
             ]))
@@ -152,33 +187,4 @@ def write_title(posts):
                 )
             )))
 
-def scrape_all(start_url, sequencer):
-    print "Collecting URLs"
-    posts = []
-    url = start_url
-    for seq in sequencer:
-        print "...", url
-        post = Blogpost(seq, url)
-        posts.append(post)
-        url = post.get_nexturl()
-        if url is None:
-            break
-
-    print "Reading articles"
-    for i, post in enumerate(posts):
-        print "{0:3}/{1:3} {2}".format(i+1, len(posts), post.url)
-        post.read()
-
-    print "Fixing URLs"
-    urlmap = dict((p.url, p) for p in posts)
-    for post in posts:
-        post.fix_urls(urlmap)
-
-    print "Writing"
-    for post in posts:
-        post.write()
-
-    print "Writing title"
-    write_title(posts)
-    print "Done"
 

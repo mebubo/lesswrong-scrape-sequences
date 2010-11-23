@@ -3,12 +3,60 @@
 import itertools
 import os
 
+import cachefetch
 import blogpost
+import sequence
+import sequences
 
 os.mkdir("target")
 
+def scrape_all(start_url, sequencer):
+    print "Collecting URLs"
+    posts = []
+    url = start_url
+    for seq in sequencer:
+        print "...", url
+        post = blogpost.Blogpost(seq, url)
+        posts.append(post)
+        url = post.get_nexturl()
+        if url is None:
+            break
+
+    print "Reading articles"
+    for i, post in enumerate(posts):
+        print "{0:3}/{1:3} {2}".format(i+1, len(posts), post.url)
+        post.read()
+
+    print "Fixing URLs"
+    codemap = dict((p.code, p) for p in posts)
+    for post in posts:
+        post.fix_urls(codemap)
+
+    print "Making Sequences"
+    for title, url, xpath in sequences.sequences:
+        print "    ", title
+        seq = sequence.Sequence(title)
+        lx = cachefetch.get_html_from_url(url)
+        for href in lx.xpath(xpath):
+            code = blogpost.urltocode(href)
+            if code is not None:
+                p = codemap[code]
+                seq.append(p)
+                p.addseq(seq)
+            #else:
+            #    print "    ", href
+
+    print "Writing"
+    for post in posts:
+        post.write()
+
+    print "Writing title"
+    blogpost.write_title(posts)
+    print "Done"
+
+
 url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
-#seq = itertools.count(1)
-seq = range(1,11)
-blogpost.scrape_all(url, seq)
+seq = itertools.count(1)
+#seq = range(1,11)
+scrape_all(url, seq)
 
