@@ -3,6 +3,9 @@ class Sequence(object):
         self._title = title
         self._entries = []
     
+    def filename(self):
+        return self._entries[0].filename
+    
     def title(self):
         return self._title
     

@@ -1,6 +1,7 @@
 import os
 import base64
 import httplib
+import urllib
 import urllib2
 import urlparse
 import lxml.etree
@@ -10,10 +11,24 @@ def makedirs(t):
     if not os.path.isdir(t):
         os.makedirs(t)
 
+def deunicode(url):
+    purl = urlparse.urlsplit(url)
+    p8 = purl.path.encode("utf-8")
+    if purl.path == p8:
+        return url
+    return urlparse.urlunsplit((
+        purl.scheme,
+        purl.netloc,
+        urllib.quote(p8),
+        purl.query,
+        purl.fragment))
+
 # Very very simple memoize suitable only for these exact circumstances
+# EVIL HACK: fixes Unicode in URLs
 def memoize(dr):
     def memf(func):
         def memoized(url):
+            url = deunicode(url)
             makedirs("cache/{0}".format(dr))
             centry = "cache/{0}/{1}".format(
                 dr, base64.b64encode(url, "_-"))

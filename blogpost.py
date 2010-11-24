@@ -87,7 +87,7 @@ class Blogpost(object):
         self.sequences = []
     
     def urljoin(self, frag):
-        return urlparse.urljoin(self.url, urllib.quote(frag.encode("utf-8")))
+        return urlparse.urljoin(self.url, frag)
     
     def get_nexturl(self):
         if self.code == "t6":
@@ -127,7 +127,7 @@ class Blogpost(object):
             if href.startswith("http://www.overcomingbias.com/"):
                 href = cachefetch.check_for_301(href)
             code = urltocode(href)
-            if code is not None and code in codemap:
+            if code is not None and code in codemap and code != self.code:
                 ref = codemap[code]
                 a.attrib["href"] = ref.filename
                 ref.backrefs.add(self)
@@ -174,17 +174,5 @@ class Blogpost(object):
 
         with open("target/" + self.filename, "w") as f:
             f.write(lxml.html.tostring(page))
-
-def write_title(posts):
-    with open("target/index.html", "w") as f:
-        f.write(lxml.html.tostring(
-            E.HTML(
-                E.HEAD(
-                    E.TITLE("Eliezer Yukowsky blog posts, 2006-2010"),
-                ), E.BODY(
-                    E.H1("Eliezer Yukowsky blog posts, 2006-2010"),
-                    E.UL(*[p.li() for p in posts])
-                )
-            )))
 
 

@@ -2,6 +2,9 @@
 
 import itertools
 import os
+import lxml.html
+from lxml.html import builder as E
+
 
 import cachefetch
 import blogpost
@@ -24,7 +27,7 @@ def scrape_all(start_url, sequencer):
 
     print "Reading articles"
     for i, post in enumerate(posts):
-        print "{0:3}/{1:3} {2}".format(i+1, len(posts), post.url)
+        print u"{0:3}/{1:3} {2}".format(i+1, len(posts), post.url)
         post.read()
 
     print "Fixing URLs"
@@ -33,6 +36,7 @@ def scrape_all(start_url, sequencer):
         post.fix_urls(codemap)
 
     print "Making Sequences"
+    sequencelist = []
     for title, url, xpath in sequences.sequences:
         print "    ", title
         seq = sequence.Sequence(title)
@@ -45,13 +49,26 @@ def scrape_all(start_url, sequencer):
                 p.addseq(seq)
             #else:
             #    print "    ", href
+        sequencelist.append(seq)
 
     print "Writing"
     for post in posts:
         post.write()
 
     print "Writing title"
-    blogpost.write_title(posts)
+    with open("target/index.html", "w") as f:
+        f.write(lxml.html.tostring(
+            E.HTML(
+                E.HEAD(
+                    E.TITLE("Eliezer Yudkowsky blog posts, 2006-2010"),
+                ), E.BODY(
+                    E.H1("Eliezer Yudkowsky blog posts, 2006-2010"),
+                    E.UL(*[p.li() for p in posts]),
+                    E.H2("Sequences"),
+                    E.UL(*[E.LI(E.A(s.title(), href=s.filename()))
+                        for s in sequencelist])
+                )
+            )))
     print "Done"
 
 
