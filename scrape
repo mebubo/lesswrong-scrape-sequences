@@ -43,7 +43,7 @@ def scrape_all(start_url, sequencer):
         lx = cachefetch.get_html_from_url(url)
         for href in lx.xpath(xpath):
             code = blogpost.urltocode(href)
-            if code is not None:
+            if code is not None and code in codemap:
                 p = codemap[code]
                 seq.append(p)
                 p.addseq(seq)
@@ -66,7 +66,8 @@ def scrape_all(start_url, sequencer):
                     E.UL(*[p.li() for p in posts]),
                     E.H2("Sequences"),
                     E.UL(*[E.LI(E.A(s.title(), href=s.filename()))
-                        for s in sequencelist])
+                        for s in sequencelist
+                        if s.has_posts()])
                 )
             )))
     print "Done"
@@ -74,6 +75,6 @@ def scrape_all(start_url, sequencer):
 
 url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
 seq = itertools.count(1)
-#seq = range(1,11)
+#seq = range(1,51)
 scrape_all(url, seq)
 

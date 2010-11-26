@@ -85,6 +85,9 @@ class Blogpost(object):
         self.filename = "{0:04d}.html".format(sequence)
         self.backrefs = set()
         self.sequences = []
+        
+    def __cmp__(self, o):
+        return cmp(self.sequence, o.sequence)
     
     def urljoin(self, frag):
         return urlparse.urljoin(self.url, frag)
@@ -139,19 +142,20 @@ class Blogpost(object):
     def addseq(self, seq):
         self.sequences.append(seq)
 
+    def ahref(self):
+        return E.A(self.title, href=self.filename)
+
     def li(self):
-        return E.LI(E.A(self.title, href=self.filename), ", ", self.date)
+        return E.LI(self.ahref(), ", ", self.date)
 
     def write(self):
         if len(self.backrefs) == 0:
             refs = []
         else:
-            refs = [           
-                E.P(E.I("Referenced by:")),
-                E.UL(*[p.li()
-                    for p in sorted(self.backrefs, 
-                        key=lambda p: p.sequence)])
-            ]
+            refl = [e for p in sorted(self.backrefs)
+                for e in (u" \u2022 ", p.ahref())]
+            refl[0] = "Referenced by: " #ugh
+            refs = [E.P(*refl)]
 
         seqs = [E.TABLE(
             E.TR(E.TH("Sequence: " + seq.title(), colspan="2")),
@@ -165,8 +169,8 @@ class Blogpost(object):
                 E.TITLE(self.title)
             ), E.BODY(*([
                 E.H1(self.title),
-                E.P("Eliezer Yudkowsky, " + self.date),
-                ] + list(self.entry) + seqs + refs + [
+                E.P(E.I("Eliezer Yudkowsky, " + self.date)),
+                ] + list(self.entry) + [E.HR()] + seqs + refs + [
                 E.P(E.I("Original with comments: ", 
                     E.A(self.title, href=self.url)))
             ]))

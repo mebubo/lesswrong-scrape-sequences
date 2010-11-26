@@ -3,6 +3,9 @@ class Sequence(object):
         self._title = title
         self._entries = []
     
+    def has_posts(self):
+        return len(self._entries)
+    
     def filename(self):
         return self._entries[0].filename
     
