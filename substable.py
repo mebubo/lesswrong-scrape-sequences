@@ -8,7 +8,7 @@ substable = [
     (u'\xb0', None),
     (u'\xba', u'\xb0'),
     (u'\xb0', None),
-    (u'\xb7', None), # Might prefer a real bullet here
+    (u'\xb7', u"\u2022"), # replace "mid-line-dot" with a real bullet
     (u'\xd7', None),
     (u'\xe2\x80\x93', u'\u2013'),
     (u'\xe2\x80\x94', u'\u2014'),
@@ -41,7 +41,7 @@ substable = [
     (u'\u2191\u2191', None),
     (u'\u2192', None),
     (u'\u2208', None),
-    (u'\u22c0', None), # should possibly be a different AND
+    (u'\u22c0', u'\u2227'), # use a normal AND, not an n-ary one
     (u'\u221a', None),
     (u'\u221e', None),
     (u'\u2227', None),
