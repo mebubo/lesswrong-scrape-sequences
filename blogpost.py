@@ -2,12 +2,14 @@ import os
 import re
 import urllib2
 import urlparse
-import shutil
+import hashlib
 import lxml.html
 from lxml.html import builder as E
 
 import cachefetch
 import substable
+
+#allattrs = set()
 
 subsmap = dict((k, v)
     for k, v in substable.substable
@@ -86,7 +88,6 @@ class Blogpost(object):
         self.filename = "{0:04d}.html".format(sequence)
         self.backrefs = set()
         self.sequences = []
-        self.images = 0
         
     def __cmp__(self, o):
         return cmp(self.sequence, o.sequence)
@@ -117,6 +118,12 @@ class Blogpost(object):
         self.date = get_date(content)
         self.entry = get_body(content, self.code)
         for e in self.entry.iter():
+            #allattrs.add(e.tag)
+            #for k in e.attrib.iterkeys():
+            #    allattrs.add(e.tag + "/" + k)
+            for k in ("class", "dragover"):
+                if e.attrib.has_key(k):
+                    del e.attrib[k]
             e.text = hifroz(e.text)
             e.tail = hifroz(e.tail)
 
@@ -127,12 +134,14 @@ class Blogpost(object):
             iurl = self.urljoin(img.attrib["src"])
             extension = iurl[iurl.rindex(".")+1:]
             print " -image-", iurl, extension
-            self.images += 1
-            name = "{0:04d}-{1:02d}.{2}".format(
-                self.sequence, self.images, extension)
+            content = cachefetch.read_url(iurl)
+            h = hashlib.sha1()
+            h.update(content)
+            name = "{0}.{1}".format(h.hexdigest()[:8], extension)
             img.attrib["src"] = name
+            print "Writing", name, iurl
             with open("target/" + name, "w") as f:
-                shutil.copyfileobj(urllib2.urlopen(iurl), f)
+                f.write(content)
         for a in self.entry.xpath(".//a"):
             if not a.attrib.has_key("href"):
                 continue

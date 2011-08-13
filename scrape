@@ -72,9 +72,9 @@ def scrape_all(start_url, sequencer):
             )))
     print "Done"
 
-
 url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
 seq = itertools.count(1)
-#seq = range(1,51)
+#seq = range(1,90)
 scrape_all(url, seq)
-
+#for e in sorted(blogpost.allattrs):
+#    print e
