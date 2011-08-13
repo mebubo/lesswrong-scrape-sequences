@@ -1,7 +1,8 @@
 import os
 import re
-import urllib
+import urllib2
 import urlparse
+import shutil
 import lxml.html
 from lxml.html import builder as E
 
@@ -85,6 +86,7 @@ class Blogpost(object):
         self.filename = "{0:04d}.html".format(sequence)
         self.backrefs = set()
         self.sequences = []
+        self.images = 0
         
     def __cmp__(self, o):
         return cmp(self.sequence, o.sequence)
@@ -122,7 +124,15 @@ class Blogpost(object):
         for img in self.entry.xpath(".//img"):
             if not img.attrib.has_key("src"):
                 continue
-            img.attrib["src"] = self.urljoin(img.attrib["src"])
+            iurl = self.urljoin(img.attrib["src"])
+            extension = iurl[iurl.rindex(".")+1:]
+            print " -image-", iurl, extension
+            self.images += 1
+            name = "{0:04d}-{1:02d}.{2}".format(
+                self.sequence, self.images, extension)
+            img.attrib["src"] = name
+            with open("target/" + name, "w") as f:
+                shutil.copyfileobj(urllib2.urlopen(iurl), f)
         for a in self.entry.xpath(".//a"):
             if not a.attrib.has_key("href"):
                 continue
