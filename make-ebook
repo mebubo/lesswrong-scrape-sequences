@@ -4,5 +4,5 @@ set -e
 
 rm -f lesswrong.epub
 
-ebook-convert target/index.html lesswrong.epub  --input-encoding=utf-8 --chapter=//h1 --use-auto-toc --title="Blog posts 2006-2010" --authors="Eliezer Yudkowsky" --language=en-US --cover=the_book_2.jpg --max-toc-links=0 --breadth-first
+time ebook-convert target/index.html lesswrong.epub  --input-encoding=utf-8 --chapter=//h1 --use-auto-toc --title="Blog posts 2006-2010" --authors="Eliezer Yudkowsky" --language=en-US --cover=the_book_2.jpg --max-toc-links=0 --breadth-first
 
