@@ -152,6 +152,8 @@ class Blogpost(object):
             if href.startswith("http://www.overcomingbias.com/"):
                 href = cachefetch.check_for_301(href)
             code = urltocode(href)
+            # insert link url in plaintext after the link
+            a.tail = u" [{0}]{1}".format(href, a.tail if a.tail else "")
             if code is not None and code in codemap and code != self.code:
                 ref = codemap[code]
                 a.attrib["href"] = ref.filename
