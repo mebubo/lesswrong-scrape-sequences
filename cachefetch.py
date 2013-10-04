@@ -53,6 +53,9 @@ conmap = {}
 @memoize("301")
 def check_for_301(url):
     print "Checking for 301: ", url
+    # workaround for messed up unicode in this redirect
+    if url == "http://www.overcomingbias.com/2008/08/lobs-theorem.html":
+        return "http://lesswrong.com/lw/t6/the_cartoon_guide_to_Lobs_theorem/"
     purl = urlparse.urlparse(url)
     if purl.hostname not in conmap:
         conmap[purl.hostname] = httplib.HTTPConnection(purl.hostname)
