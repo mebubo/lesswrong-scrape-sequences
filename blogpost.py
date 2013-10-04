@@ -102,6 +102,9 @@ class Blogpost(object):
         elif self.code == "2s":
             # Points to the article logically after it for some reason
             return "http://lesswrong.com/lw/31/what_do_we_mean_by_rationality/"
+        elif self.code == "9hb":
+            # Force last post
+            return None
         doc = cachefetch.get_from_url(
             "http://lesswrong.com/api/article_navigation?article_id={0}".format(self.code))
         li = get_li(doc, "by author")
