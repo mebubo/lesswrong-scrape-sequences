@@ -45,7 +45,7 @@ def urltocode(url):
 
 def get_title(content):
     for t in content.xpath("//h1/a/text()"):
-        return unicode(t)
+        return unicode(t).strip()
 
 def get_body(content, code):
     for frag in content.xpath("//div[@id=\"entry_t3_{0}\"]/div/div".format(code)):
