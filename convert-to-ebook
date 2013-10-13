@@ -12,7 +12,7 @@ time ebook-convert target/index.html $output \
     --title="Blog posts 2006-2010" \
     --authors="Eliezer Yudkowsky" \
     --language=en-US \
-    --cover=the_book_2.jpg \
+    --cover=cover.jpg \
     --max-toc-links=0 \
     --breadth-first
 
