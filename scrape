@@ -93,7 +93,7 @@ def write_sequences(sequencelist):
                     E.TITLE("Sequences"),
                 ), E.BODY(
                     E.H1("Sequences"),
-                    E.UL(*[E.LI(s.title(),
+                    E.UL(*[E.LI(E.B(s.title()),
                                 E.UL(*[p.li() for p in s]))
                            for s in sequencelist
                            if s.has_posts()])
