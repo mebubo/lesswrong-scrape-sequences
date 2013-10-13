@@ -26,4 +26,7 @@ class Sequence(object):
         if ix+1 == len(self._entries):
             return None
         return self._entries[ix +1]
-        
+
+    def __iter__(self):
+        for p in self._entries:
+            yield p
