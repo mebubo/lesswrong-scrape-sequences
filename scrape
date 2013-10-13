@@ -77,7 +77,9 @@ def write_index(posts):
                     E.TITLE("Eliezer Yudkowsky blog posts, 2006-2010"),
                 ), E.BODY(
                     E.H1("Eliezer Yudkowsky blog posts, 2006-2010"),
-                    E.A("Sequences", href="seq.html"),
+                    E.H3("In sequence order:"),
+                    E.UL(E.LI(E.A("Sequences", href="seq.html"))),
+                    E.H3("In chronological order:"),
                     E.UL(*[p.li() for p in posts])
                 )
             )))
