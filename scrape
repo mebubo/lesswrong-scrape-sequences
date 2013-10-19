@@ -12,7 +12,7 @@ import sequence
 import sequences
 
 FIRST_POST = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
-TITLE = "Eliezer Yudkowsky blog posts, 2006-2013"
+TITLE = "Eliezer Yudkowsky. Lesswrong.com blog posts, 2006-2013."
 
 def scrape_all(start_url, sequencer):
     posts = list(collect_urls(start_url, sequencer))

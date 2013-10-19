@@ -9,7 +9,7 @@ time ebook-convert target/index.html $output \
     --input-encoding=utf-8 \
     --chapter=//h1 \
     --use-auto-toc \
-    --title="Blog posts 2006-2013" \
+    --title="Lesswrong.com blog posts 2006-2013" \
     --authors="Eliezer Yudkowsky" \
     --language=en-US \
     --cover=cover.jpg \
