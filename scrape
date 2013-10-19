@@ -11,16 +11,18 @@ import blogpost
 import sequence
 import sequences
 
-os.mkdir("target")
+FIRST_POST = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
 
 def scrape_all(start_url, sequencer):
     posts = list(collect_urls(start_url, sequencer))
+    codemap = create_codemap(posts)
     read_articles(posts)
-    codemap = fix_urls(posts)
-    sequencelist = make_sequences(codemap)
+    fix_urls(posts, codemap)
+    sequencelist = list(make_sequences(codemap))
     write_posts(posts)
     write_index(posts)
     write_sequences(sequencelist)
+    save_sequences_list(sequencelist)
     print "Done"
 
 def collect_urls(start_url, sequencer):
@@ -34,18 +36,19 @@ def collect_urls(start_url, sequencer):
         if url is None:
             break
 
+def create_codemap(posts):
+    return dict((p.code, p) for p in posts)
+
 def read_articles(posts):
     print "Reading articles"
     for i, post in enumerate(posts):
         print u"{0:3}/{1:3} {2}".format(i+1, len(posts), post.url)
         post.read()
 
-def fix_urls(posts):
+def fix_urls(posts, codemap):
     print "Fixing URLs"
-    codemap = dict((p.code, p) for p in posts)
     for post in posts:
         post.fix_urls(codemap)
-    return codemap
 
 def make_sequences(codemap):
     print "Making Sequences"
@@ -78,7 +81,7 @@ def write_index(posts):
                 ), E.BODY(
                     E.H1("Eliezer Yudkowsky blog posts, 2006-2010"),
                     E.H3("In sequence order:"),
-                    E.UL(E.LI(E.A("Sequences", href="seq.html"))),
+                    E.UL(E.LI(E.A("Sequences", href="sequences.html"))),
                     E.H3("In chronological order:"),
                     E.UL(*[p.li() for p in posts])
                 )
@@ -86,7 +89,7 @@ def write_index(posts):
 
 def write_sequences(sequencelist):
     print "Writing sequences"
-    with open("target/seq.html", "w") as f:
+    with open("target/sequences.html", "w") as f:
         f.write(lxml.html.tostring(
             E.HTML(
                 E.HEAD(
@@ -100,10 +103,20 @@ def write_sequences(sequencelist):
                 )
             )))
 
+def save_sequences_list(sequencelist):
+    with open("sequences.org", "w") as f:
+        for s in sequencelist:
+            f.write("* {0}\n".format(s.title()))
+            for p in s:
+                f.write("  - {0}\n".format(p.url))
+            f.write("\n")
 
-url = "http://lesswrong.com/lw/gn/the_martial_art_of_rationality/"
-seq = itertools.count(1)
-#seq = range(1,90)
-scrape_all(url, seq)
-#for e in sorted(blogpost.allattrs):
-#    print e
+def main():
+    os.mkdir("target")
+    sequencer = itertools.count(1)
+    scrape_all(FIRST_POST, sequencer)
+    #for e in sorted(blogpost.allattrs):
+    #    print e
+
+if __name__ == '__main__':
+    main()
