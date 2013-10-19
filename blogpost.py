@@ -2,7 +2,6 @@ import os
 import re
 import urllib2
 import urlparse
-import hashlib
 import lxml.html
 from lxml.html import builder as E
 
@@ -38,10 +37,11 @@ def urltocode(url):
     if purl.hostname != "lesswrong.com":
         return None
     path = purl.path.split("/")
-    if not (path[0] == ""
-        and path[1] == "lw"):
-        return None
-    return path[2]
+    if path[0] == "" and path[1] == "lw":
+        return path[2]
+    elif path[:4] == ["", "r", "lesswrong", "lw"]:
+        return path[4]
+    return None
 
 def get_title(content):
     for t in content.xpath("//h1/a/text()"):
@@ -102,9 +102,6 @@ class Blogpost(object):
         elif self.code == "2s":
             # Points to the article logically after it for some reason
             return "http://lesswrong.com/lw/31/what_do_we_mean_by_rationality/"
-        elif self.code == "9hb":
-            # Force last post
-            return None
         doc = cachefetch.get_from_url(
             "http://lesswrong.com/api/article_navigation?article_id={0}".format(self.code))
         li = get_li(doc, "by author")
@@ -130,17 +127,20 @@ class Blogpost(object):
             e.text = hifroz(e.text)
             e.tail = hifroz(e.tail)
 
+    def filename_for_image(self, url, content):
+        extension = url[url.rindex("."):]
+        if extension.lower() not in [".gif", ".png", ".svg", ".jpg", ".jpeg"]:
+            extension = ""
+        return "{0}{1}".format(cachefetch.sha1(content)[:8], extension)
+
     def fix_urls(self, codemap):
         for img in self.entry.xpath(".//img"):
             if not img.attrib.has_key("src"):
                 continue
             iurl = self.urljoin(img.attrib["src"])
-            extension = iurl[iurl.rindex(".")+1:]
-            print " -image-", iurl, extension
+            print " -image-", iurl
             content = cachefetch.read_url(iurl)
-            h = hashlib.sha1()
-            h.update(content)
-            name = "{0}.{1}".format(h.hexdigest()[:8], extension)
+            name = self.filename_for_image(iurl, content)
             img.attrib["src"] = name
             print "Writing", name, iurl
             with open("target/" + name, "w") as f:

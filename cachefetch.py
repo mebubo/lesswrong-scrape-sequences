@@ -6,6 +6,7 @@ import urllib2
 import urlparse
 import lxml.etree
 import lxml.html
+import hashlib
 
 def makedirs(t):
     if not os.path.isdir(t):
@@ -23,6 +24,12 @@ def deunicode(url):
         purl.query,
         purl.fragment))
 
+
+def sha1(content):
+    h = hashlib.sha1()
+    h.update(content)
+    return h.hexdigest()
+
 # Very very simple memoize suitable only for these exact circumstances
 # EVIL HACK: fixes Unicode in URLs
 def memoize(dr):
@@ -30,8 +37,12 @@ def memoize(dr):
         def memoized(url):
             url = deunicode(url)
             makedirs("cache/{0}".format(dr))
-            centry = "cache/{0}/{1}".format(
-                dr, base64.b64encode(url, "_-"))
+            basename = base64.b64encode(url, "_-")
+            # don't exceed max filename length
+            # we don't hash everything to preserve reversibility for most urls
+            if len(basename) > 255:
+                basename = sha1(url)
+            centry = "cache/{0}/{1}".format(dr, basename)
             if os.path.isfile(centry):
                 with open(centry) as f:
                     return f.read()
