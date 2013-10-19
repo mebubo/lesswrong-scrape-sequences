@@ -15,7 +15,7 @@ sequences = [
         xpath),
     ("Politics is the Mind-Killer",
         "http://wiki.lesswrong.com/wiki/Politics_is_the_Mind-Killer", 
-        idxpath("Blog_posts:")),
+        idxpath("Blog_posts")),
     ("Death Spirals and the Cult Attractor",
         "http://wiki.lesswrong.com/wiki/Death_Spirals_and_the_Cult_Attractor",
         xpath),
@@ -68,8 +68,5 @@ sequences = [
     ("Yudkowsky's Coming of Age",
         "http://wiki.lesswrong.com/wiki/Yudkowsky's_Coming_of_Age", 
         xpath),
-    #("Decision Theory",
-    #    "http://wiki.lesswrong.com/wiki/Decision_theory_(sequence)#Sequence", 
-    #    idxpath("Sequence")),
 ]
 
