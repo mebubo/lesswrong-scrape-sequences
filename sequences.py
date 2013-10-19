@@ -52,6 +52,9 @@ sequences = [
     ("The Craft and the Community",
         "http://wiki.lesswrong.com/wiki/The_Craft_and_the_Community",
         xpath),
+    ("Highly Advanced Epistemology 101 for Beginners",
+        "http://wiki.lesswrong.com/wiki/Highly_Advanced_Epistemology_101_for_Beginners",
+        xpath),
     
     ("Joy in the Merely Real",
         "http://wiki.lesswrong.com/wiki/Joy_in_the_Merely_Real", 
