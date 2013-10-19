@@ -61,10 +61,10 @@ def get_titleurl(content):
     for a in content.xpath("//h1/a/@href"):
         return unicode(a)
 
-def linkornone(post):
+def linkornone(post, label):
     if post is None:
         return ""
-    return E.A(post.title, href=post.filename)
+    return E.P(E.I(label), E.A(post.title, href=post.filename))
 
 rexp = re.compile(r"([ -~]*)([^ -~]+|$)")
 def hifroz(t):
@@ -184,8 +184,8 @@ class Blogpost(object):
         seqs = [E.TABLE(
             E.TR(E.TH("Sequence: " + seq.title(), colspan="2")),
             E.TR(
-                E.TD(linkornone(seq.before(self))),
-                E.TD(linkornone(seq.after(self)))
+                E.TD(linkornone(seq.before(self), "Previous: ")),
+                E.TD(linkornone(seq.after(self), "Next: "))
             )
         ) for seq in self.sequences]
         page = E.HTML(
