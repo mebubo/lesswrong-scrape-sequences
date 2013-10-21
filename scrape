@@ -19,12 +19,11 @@ def scrape_all(start_url, sequencer):
     codemap = create_codemap(posts)
     read_articles(posts)
     fix_urls(posts, codemap)
-    sequencelist = list(make_sequences(codemap))
+    sequencelist = make_sequences(codemap)
     write_posts(posts)
     write_index(posts, sequencelist)
-    write_sequences_index(sequencelist)
-    write_sequences(sequencelist)
-    save_sequences_list(sequencelist)
+    sequencelist.write()
+    sequencelist.save()
     print "Done"
 
 def collect_urls(start_url, sequencer):
@@ -54,6 +53,7 @@ def fix_urls(posts, codemap):
 
 def make_sequences(codemap):
     print "Making Sequences"
+    sequence_list = sequence.SequenceList()
     for i, (title, url, xpath) in enumerate(sequences.sequences):
         print "    ", title
         seq = sequence.Sequence(title, i+1)
@@ -66,7 +66,8 @@ def make_sequences(codemap):
                 p.addseq(seq)
             #else:
             #    print "    ", href
-        yield seq
+        sequence_list.add(seq)
+    return sequence_list
 
 def write_posts(posts):
     print "Writing posts"
@@ -89,44 +90,6 @@ def write_index(posts, sequencelist):
                     E.UL(*[p.li() for p in posts])
                 )
             )))
-
-def write_sequences_index(sequencelist):
-    print "Writing sequences"
-    with open("target/sequences.html", "w") as f:
-        f.write(lxml.html.tostring(
-            E.HTML(
-                E.HEAD(
-                    E.TITLE("All sequences"),
-                ), E.BODY(
-                    E.H1("All sequences"),
-                    E.UL(*[E.LI(E.B(s.full_title()),
-                                E.UL(*[p.li(include_date=False) for p in s]))
-                           for s in sequencelist
-                           if s.has_posts()])
-                )
-            )))
-
-def write_sequences(sequencelist):
-    for s in sequencelist:
-        if s.has_posts():
-            with open("target/" + s.filename(), "w") as f:
-                f.write(lxml.html.tostring(
-                    E.HTML(
-                        E.HEAD(
-                            E.TITLE(s.full_title()),
-                        ), E.BODY(
-                            E.H1(s.full_title()),
-                            E.UL(*[p.li(include_date=False) for p in s]))
-                    )
-                ))
-
-def save_sequences_list(sequencelist):
-    with open("sequences.org", "w") as f:
-        for s in sequencelist:
-            f.write("* {0}\n".format(s.title()))
-            for p in s:
-                f.write("  - {0}\n".format(p.url))
-            f.write("\n")
 
 def main():
     os.mkdir("target")

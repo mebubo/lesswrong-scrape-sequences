@@ -61,11 +61,6 @@ def get_titleurl(content):
     for a in content.xpath("//h1/a/@href"):
         return unicode(a)
 
-def linkornone(post, label):
-    if post is None:
-        return ""
-    return E.P(E.I(label), E.A(post.title, href=post.filename))
-
 rexp = re.compile(r"([ -~]*)([^ -~]+|$)")
 def hifroz(t):
     if t is None:
@@ -172,6 +167,14 @@ class Blogpost(object):
     def li(self, include_date=True):
         return E.LI(self.ahref(), (", " + self.date) if include_date else "")
 
+    def link_post_or_sequence(self, post, sequence, label):
+        if post is not None:
+            return E.P(E.I(label), E.A(post.title, href=post.filename))
+        elif sequence is not None:
+            return E.P(E.I(label), sequence.a())
+        else:
+            return ""
+
     def write(self):
         if len(self.backrefs) == 0:
             refs = []
@@ -184,8 +187,8 @@ class Blogpost(object):
         seqs = [E.TABLE(
             E.TR(E.TH(seq.a(), ":", colspan="2")),
             E.TR(
-                E.TD(linkornone(seq.before(self), "Previous: ")),
-                E.TD(linkornone(seq.after(self), "Next: "))
+                E.TD(self.link_post_or_sequence(seq.before(self), seq.previous, "Previous: ")),
+                E.TD(self.link_post_or_sequence(seq.after(self), seq.next, "Next: "))
             )
         ) for seq in self.sequences]
         page = E.HTML(
