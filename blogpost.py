@@ -169,8 +169,8 @@ class Blogpost(object):
     def ahref(self):
         return E.A(self.title, href=self.filename)
 
-    def li(self):
-        return E.LI(self.ahref(), ", ", self.date)
+    def li(self, include_date=True):
+        return E.LI(self.ahref(), (", " + self.date) if include_date else "")
 
     def write(self):
         if len(self.backrefs) == 0:
@@ -178,11 +178,11 @@ class Blogpost(object):
         else:
             refl = [e for p in sorted(self.backrefs)
                 for e in (u" \u2022 ", p.ahref())]
-            refl[0] = "Referenced by: " #ugh
+            refl[0] = E.I("Referenced by: ") #ugh
             refs = [E.P(*refl)]
 
         seqs = [E.TABLE(
-            E.TR(E.TH("Sequence: " + seq.title(), colspan="2")),
+            E.TR(E.TH(seq.a(), ":", colspan="2")),
             E.TR(
                 E.TD(linkornone(seq.before(self), "Previous: ")),
                 E.TD(linkornone(seq.after(self), "Next: "))
@@ -195,8 +195,8 @@ class Blogpost(object):
                 E.H1(self.title),
                 E.P(E.I("Eliezer Yudkowsky, " + self.date)),
                 ] + list(self.entry) + [E.HR()] + seqs + refs + [
-                E.P(E.I("Original with comments: ", 
-                    E.A(self.title, href=self.url)))
+                E.P(E.I("Original with comments: "),
+                    E.A(self.title, href=self.url))
             ]))
         )
 

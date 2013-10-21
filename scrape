@@ -21,7 +21,8 @@ def scrape_all(start_url, sequencer):
     fix_urls(posts, codemap)
     sequencelist = list(make_sequences(codemap))
     write_posts(posts)
-    write_index(posts)
+    write_index(posts, sequencelist)
+    write_sequences_index(sequencelist)
     write_sequences(sequencelist)
     save_sequences_list(sequencelist)
     print "Done"
@@ -53,9 +54,9 @@ def fix_urls(posts, codemap):
 
 def make_sequences(codemap):
     print "Making Sequences"
-    for title, url, xpath in sequences.sequences:
+    for i, (title, url, xpath) in enumerate(sequences.sequences):
         print "    ", title
-        seq = sequence.Sequence(title)
+        seq = sequence.Sequence(title, i+1)
         lx = cachefetch.get_html_from_url(url)
         for href in lx.xpath(xpath):
             code = blogpost.urltocode(href)
@@ -72,7 +73,7 @@ def write_posts(posts):
     for post in posts:
         post.write()
 
-def write_index(posts):
+def write_index(posts, sequencelist):
     print "Writing index"
     with open("target/index.html", "w") as f:
         f.write(lxml.html.tostring(
@@ -82,27 +83,42 @@ def write_index(posts):
                 ), E.BODY(
                     E.H1(TITLE),
                     E.H3("In sequence order:"),
-                    E.UL(E.LI(E.A("Sequences", href="sequences.html"))),
+                    E.UL(E.LI(E.A("All sequences", href="sequences.html")),
+                         E.UL(*[s.li() for s in sequencelist if s.has_posts()])),
                     E.H3("In chronological order:"),
                     E.UL(*[p.li() for p in posts])
                 )
             )))
 
-def write_sequences(sequencelist):
+def write_sequences_index(sequencelist):
     print "Writing sequences"
     with open("target/sequences.html", "w") as f:
         f.write(lxml.html.tostring(
             E.HTML(
                 E.HEAD(
-                    E.TITLE("Sequences"),
+                    E.TITLE("All sequences"),
                 ), E.BODY(
-                    E.H1("Sequences"),
-                    E.UL(*[E.LI(E.B(s.title()),
-                                E.UL(*[p.li() for p in s]))
+                    E.H1("All sequences"),
+                    E.UL(*[E.LI(E.B(s.full_title()),
+                                E.UL(*[p.li(include_date=False) for p in s]))
                            for s in sequencelist
                            if s.has_posts()])
                 )
             )))
+
+def write_sequences(sequencelist):
+    for s in sequencelist:
+        if s.has_posts():
+            with open("target/" + s.filename(), "w") as f:
+                f.write(lxml.html.tostring(
+                    E.HTML(
+                        E.HEAD(
+                            E.TITLE(s.full_title()),
+                        ), E.BODY(
+                            E.H1(s.full_title()),
+                            E.UL(*[p.li(include_date=False) for p in s]))
+                    )
+                ))
 
 def save_sequences_list(sequencelist):
     with open("sequences.org", "w") as f:
