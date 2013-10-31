@@ -10,9 +10,7 @@ sequences = [
     ("Mysterious Answers to Mysterious Questions",
         "http://wiki.lesswrong.com/wiki/Mysterious_Answers_to_Mysterious_Questions",
         "//span[@id=\"Main_sequence\"]/parent::*/following-sibling::h5//a/@href"),
-    ("A Human's Guide to Words", 
-        "http://wiki.lesswrong.com/wiki/A_Human's_Guide_to_Words",
-        xpath),
+
     ("Politics is the Mind-Killer",
         "http://wiki.lesswrong.com/wiki/Politics_is_the_Mind-Killer", 
         idxpath("Blog_posts")),
@@ -37,6 +35,10 @@ sequences = [
     ("Letting Go",
         "http://wiki.lesswrong.com/wiki/How_To_Actually_Change_Your_Mind",
         idxpath("Letting_Go")),
+
+    ("A Human's Guide to Words", 
+        "http://wiki.lesswrong.com/wiki/A_Human's_Guide_to_Words",
+        xpath),
     ("Reductionism",
         "http://wiki.lesswrong.com/wiki/Reductionism_(sequence)", 
         idxpath("Main_sequence")),
