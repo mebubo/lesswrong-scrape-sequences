@@ -133,6 +133,9 @@ class Blogpost(object):
             if not img.attrib.has_key("src"):
                 continue
             iurl = self.urljoin(img.attrib["src"])
+            # 404
+            if iurl == "http://labspace.open.ac.uk/file.php/4771/DSE232_1_004i.jpg":
+                continue
             print " -image-", iurl
             content = cachefetch.read_url(iurl)
             name = self.filename_for_image(iurl, content)
