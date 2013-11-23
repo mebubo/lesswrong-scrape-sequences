@@ -38,7 +38,7 @@
   - http://lesswrong.com/lw/la/truly_part_of_you/
   - http://lesswrong.com/lw/wb/chaotic_inversion/
 
-* How To Actually Change Your Mind: Politics is the Mind-Killer
+* Politics is the Mind-Killer
   - http://lesswrong.com/lw/gt/a_fable_of_science_and_politics/
   - http://lesswrong.com/lw/gw/politics_is_the_mindkiller/
   - http://lesswrong.com/lw/gz/policy_debates_should_not_appear_onesided/
@@ -54,7 +54,7 @@
   - http://lesswrong.com/lw/m5/false_laughter/
   - http://lesswrong.com/lw/jd/human_evil_and_muddled_thinking/
 
-* How To Actually Change Your Mind: Death Spirals and the Cult Attractor
+* Death Spirals and the Cult Attractor
   - http://lesswrong.com/lw/lg/the_affect_heuristic/
   - http://lesswrong.com/lw/lh/evaluability_and_cheap_holiday_shopping/
   - http://lesswrong.com/lw/li/unbounded_scales_huge_jury_awards_futurism/
@@ -77,7 +77,7 @@
   - http://lesswrong.com/lw/mb/lonely_dissent/
   - http://lesswrong.com/lw/md/cultish_countercultishness/
 
-* How To Actually Change Your Mind: Seeing with Fresh Eyes
+* Seeing with Fresh Eyes
   - http://lesswrong.com/lw/j7/anchoring_and_adjustment/
   - http://lesswrong.com/lw/k3/priming_and_contamination/
   - http://lesswrong.com/lw/k4/do_we_believe_everything_were_told/
@@ -93,14 +93,14 @@
   - http://lesswrong.com/lw/mb/lonely_dissent/
   - http://lesswrong.com/lw/s3/the_genetic_fallacy/
 
-* How To Actually Change Your Mind: Noticing Confusion
+* Noticing Confusion
   - http://lesswrong.com/lw/if/your_strength_as_a_rationalist/
   - http://lesswrong.com/lw/ih/absence_of_evidence_is_evidence_of_absence/
   - http://lesswrong.com/lw/il/hindsight_bias/
   - http://lesswrong.com/lw/im/hindsight_devalues_science/
   - http://lesswrong.com/lw/iw/positive_bias_look_into_the_dark/
 
-* How To Actually Change Your Mind: Against Rationalization
+* Against Rationalization
   - http://lesswrong.com/lw/he/knowing_about_biases_can_hurt_people/
   - http://lesswrong.com/lw/ij/update_yourself_incrementally/
   - http://lesswrong.com/lw/ik/one_argument_against_an_army/
@@ -119,7 +119,7 @@
   - http://lesswrong.com/lw/uy/dark_side_epistemology/
   - http://lesswrong.com/lw/57/the_sacred_mundane/
 
-* How To Actually Change Your Mind: Against Doublethink
+* Against Doublethink
   - http://lesswrong.com/lw/k0/singlethink/
   - http://lesswrong.com/lw/je/doublethink_choosing_to_be_biased/
   - http://lesswrong.com/lw/r/no_really_ive_deceived_myself/
@@ -127,7 +127,7 @@
   - http://lesswrong.com/lw/1f/moores_paradox/
   - http://lesswrong.com/lw/1o/dont_believe_youll_selfdeceive/
 
-* How To Actually Change Your Mind: Overly Convenient Excuses
+* Overly Convenient Excuses
   - http://lesswrong.com/lw/gq/the_proper_use_of_humility/
   - http://lesswrong.com/lw/hu/the_third_alternative/
   - http://lesswrong.com/lw/19m/privileging_the_hypothesis/
@@ -138,7 +138,7 @@
   - http://lesswrong.com/lw/mo/infinite_certainty/
   - http://lesswrong.com/lw/mp/0_and_1_are_not_probabilities/
 
-* How To Actually Change Your Mind: Letting Go
+* Letting Go
   - http://lesswrong.com/lw/hp/feeling_rational/
   - http://lesswrong.com/lw/i9/the_importance_of_saying_oops/
   - http://lesswrong.com/lw/j8/the_crackpot_offer/
