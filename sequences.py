@@ -73,4 +73,7 @@ sequences = [
     ("Yudkowsky's Coming of Age",
         "http://wiki.lesswrong.com/wiki/Yudkowsky's_Coming_of_Age",
         xpath),
+    ("Ethical injunction",
+        "http://wiki.lesswrong.com/wiki/Ethical_injunction",
+        xpath),
 ]
