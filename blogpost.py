@@ -197,7 +197,7 @@ class Blogpost(object):
         page = E.HTML(
             E.HEAD(
                 E.TITLE(self.title)
-            ), E.BODY(*([
+            ), E.BODY(style= "width: 600px; margin: 0 auto; font-family: Georgia, serif;", *([
                 E.H1(self.title),
                 E.P(E.I("Eliezer Yudkowsky, " + self.date)),
                 ] + list(self.entry) + [E.HR()] + seqs + refs + [
